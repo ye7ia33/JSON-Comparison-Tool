@@ -1,0 +1,14 @@
+{
+  "requestId": "6818b5a26ebde2e8f771a877",
+  "providers": [
+    "Atlas",
+    "Flynas",
+    "Flyadeal",
+    "FlyDubai",
+    "Emirates",
+    "Amadeus",
+    "Sabre"
+  ],
+  "isSuccess": true,
+  "apiVersion": "v2"
+}
