@@ -9,7 +9,6 @@ st.set_page_config(
     page_icon="🔍",
     layout="wide"
 )
-st.markdown("Made by [Yahia Eldow](https://www.yahia-eldow.com)", unsafe_allow_html=True)
 
 def parse_json_file(uploaded_file) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
     """Parse a JSON file and return the data or an error message."""
@@ -140,6 +139,9 @@ def main():
                 file_name="json_comparison_report.json",
                 mime="application/json"
             )
+    # Add footer
+    st.markdown("---")
+    st.markdown("Made by [Yahia Eldow](https://www.yahia-eldow.com)", unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
