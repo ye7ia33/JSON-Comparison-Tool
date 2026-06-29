@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,24 +8,87 @@
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* ── Light theme ── */
+:root {
+  --bg:                 #f0f2f6;
+  --card-bg:            #ffffff;
+  --text:               #31333f;
+  --text-muted:         #808495;
+  --border:             #e6eaf1;
+  --input-bg:           #ffffff;
+  --input-text:         #31333f;
+  --btn-sec-bg:         #f0f2f6;
+  --btn-sec-text:       #31333f;
+  --btn-sec-border:     #e6eaf1;
+  --metric-bg:          #f6f8fa;
+  --section-label:      #808495;
+  --file-drop-border:   #d1d5db;
+  --file-drop-hover-bg: #fff5f5;
+  --value-path-bg:      #f6f8fa;
+  --tab-hover-text:     #31333f;
+  --shadow:             0 1px 4px rgba(0,0,0,0.08);
+  --accent:             #ff4b4b;
+}
+
+/* ── Dark theme ── */
+[data-theme="dark"] {
+  --bg:                 #0e1117;
+  --card-bg:            #1c1f26;
+  --text:               #fafafa;
+  --text-muted:         #9da5b4;
+  --border:             #2d3139;
+  --input-bg:           #262b35;
+  --input-text:         #fafafa;
+  --btn-sec-bg:         #262b35;
+  --btn-sec-text:       #fafafa;
+  --btn-sec-border:     #3d4450;
+  --metric-bg:          #262b35;
+  --section-label:      #9da5b4;
+  --file-drop-border:   #3d4450;
+  --file-drop-hover-bg: #2a1f1f;
+  --value-path-bg:      #262b35;
+  --tab-hover-text:     #fafafa;
+  --shadow:             0 1px 6px rgba(0,0,0,0.35);
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: #f0f2f6;
-  color: #31333f;
+  background: var(--bg);
+  color: var(--text);
   min-height: 100vh;
+  transition: background 0.2s, color 0.2s;
 }
 
 .container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
 
-h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.4rem; }
-.subtitle { color: #808495; margin-bottom: 2rem; font-size: 0.95rem; }
+/* ── Header ── */
+.header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; margin-bottom: 2rem; gap: 1rem;
+}
+.header-left h1  { font-size: 2rem; font-weight: 700; margin-bottom: 0.4rem; }
+.header-left .subtitle { color: var(--text-muted); font-size: 0.95rem; }
+
+/* Theme toggle */
+.theme-toggle {
+  background: var(--card-bg); border: 1px solid var(--border);
+  border-radius: 2rem; padding: 0.4rem 0.9rem;
+  cursor: pointer; font-size: 1.1rem; line-height: 1;
+  display: flex; align-items: center; gap: 0.4rem;
+  color: var(--text); transition: background 0.2s, border-color 0.2s;
+  white-space: nowrap; flex-shrink: 0;
+}
+.theme-toggle:hover { border-color: var(--accent); }
+.theme-toggle .label { font-size: 0.82rem; font-weight: 600; }
 
 .card {
-  background: #fff;
+  background: var(--card-bg);
   border-radius: 0.6rem;
   padding: 1.75rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: background 0.2s, border-color 0.2s;
 }
 
 /* Radio groups */
@@ -34,12 +97,12 @@ h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.4rem; }
   display: flex; align-items: center; gap: 0.4rem;
   cursor: pointer; font-size: 0.95rem; user-select: none;
 }
-.radio-label input[type="radio"] { accent-color: #ff4b4b; }
+.radio-label input[type="radio"] { accent-color: var(--accent); }
 
 .section-label {
   display: block; font-weight: 600; font-size: 0.9rem;
   text-transform: uppercase; letter-spacing: 0.05em;
-  color: #808495; margin-bottom: 0.75rem;
+  color: var(--section-label); margin-bottom: 0.75rem;
 }
 
 /* Two column */
@@ -52,28 +115,31 @@ textarea {
   width: 100%; height: 200px;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
   font-size: 0.82rem; line-height: 1.5;
-  border: 1px solid #e6eaf1; border-radius: 0.4rem;
+  border: 1px solid var(--border); border-radius: 0.4rem;
   padding: 0.75rem; resize: vertical; outline: none;
-  transition: border-color 0.15s; color: #31333f;
+  background: var(--input-bg); color: var(--input-text);
+  transition: border-color 0.15s, background 0.2s;
 }
-textarea:focus { border-color: #ff4b4b; box-shadow: 0 0 0 3px rgba(255,75,75,0.1); }
+textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(255,75,75,0.12); }
 
 /* File drop */
 .file-drop {
-  border: 2px dashed #d1d5db; border-radius: 0.5rem;
+  border: 2px dashed var(--file-drop-border); border-radius: 0.5rem;
   padding: 2rem 1rem; text-align: center; cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   min-height: 130px; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: 0.4rem;
 }
-.file-drop:hover, .file-drop.drag-over { border-color: #ff4b4b; background: #fff5f5; }
+.file-drop:hover, .file-drop.drag-over {
+  border-color: var(--accent); background: var(--file-drop-hover-bg);
+}
 .file-drop input[type="file"] { display: none; }
 .file-icon { font-size: 1.75rem; }
-.file-hint { color: #808495; font-size: 0.88rem; }
-.file-name { font-weight: 600; font-size: 0.9rem; color: #31333f; margin-top: 0.25rem; }
+.file-hint { color: var(--text-muted); font-size: 0.88rem; }
+.file-name { font-weight: 600; font-size: 0.9rem; color: var(--text); margin-top: 0.25rem; }
 
 /* Divider */
-.divider { border: none; border-top: 1px solid #e6eaf1; margin: 1.5rem 0; }
+.divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
 
 /* Buttons */
 .btn {
@@ -83,31 +149,34 @@ textarea:focus { border-color: #ff4b4b; box-shadow: 0 0 0 3px rgba(255,75,75,0.1
 }
 .btn:hover { filter: brightness(0.93); }
 .btn:active { transform: scale(0.98); }
-.btn-primary { background: #ff4b4b; color: #fff; }
-.btn-secondary { background: #f0f2f6; color: #31333f; border: 1px solid #e6eaf1; }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-secondary {
+  background: var(--btn-sec-bg); color: var(--btn-sec-text);
+  border: 1px solid var(--btn-sec-border);
+}
 
 .actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap; }
 
 /* Tabs */
-.tabs { display: flex; border-bottom: 2px solid #e6eaf1; margin-bottom: 1.5rem; }
+.tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 1.5rem; }
 .tab {
   padding: 0.7rem 1.4rem; cursor: pointer; font-weight: 600;
-  color: #808495; border-bottom: 2px solid transparent; margin-bottom: -2px;
+  color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px;
   transition: color 0.15s; font-size: 0.95rem;
 }
-.tab:hover { color: #31333f; }
-.tab.active { color: #ff4b4b; border-bottom-color: #ff4b4b; }
+.tab:hover { color: var(--tab-hover-text); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
 /* Metric */
 .metric {
-  background: #f6f8fa; border-radius: 0.5rem;
+  background: var(--metric-bg); border-radius: 0.5rem;
   padding: 1rem 1.5rem; display: inline-block; margin-bottom: 1.5rem;
-  border: 1px solid #e6eaf1;
+  border: 1px solid var(--border);
 }
-.metric-label { font-size: 0.75rem; color: #808495; text-transform: uppercase; letter-spacing: 0.06em; }
-.metric-value { font-size: 2.25rem; font-weight: 700; color: #31333f; line-height: 1.2; }
+.metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.metric-value  { font-size: 2.25rem; font-weight: 700; color: var(--text); line-height: 1.2; }
 
 /* Diff key sections */
 .diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
@@ -120,19 +189,22 @@ textarea:focus { border-color: #ff4b4b; box-shadow: 0 0 0 3px rgba(255,75,75,0.1
   padding: 0.35rem 0.7rem; border-radius: 0.3rem; margin-bottom: 0.35rem;
   word-break: break-all;
 }
-.diff-added  { background: #e6ffec; color: #1a7f37; border-left: 3px solid #2da44e; }
+.diff-added   { background: #e6ffec; color: #1a7f37; border-left: 3px solid #2da44e; }
 .diff-removed { background: #ffebe9; color: #cf222e; border-left: 3px solid #cf222e; }
+
+[data-theme="dark"] .diff-added   { background: #0d2c17; color: #56d364; border-left-color: #2ea043; }
+[data-theme="dark"] .diff-removed { background: #2c0f0f; color: #f97583; border-left-color: #e05252; }
 
 /* Value changes */
 .changes-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem; }
 .value-change {
-  border: 1px solid #e6eaf1; border-radius: 0.5rem;
+  border: 1px solid var(--border); border-radius: 0.5rem;
   overflow: hidden; margin-bottom: 1rem;
 }
 .value-change-path {
-  background: #f6f8fa; padding: 0.5rem 0.8rem;
+  background: var(--value-path-bg); padding: 0.5rem 0.8rem;
   font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.82rem;
-  font-weight: 600; border-bottom: 1px solid #e6eaf1; word-break: break-all;
+  font-weight: 600; border-bottom: 1px solid var(--border); word-break: break-all;
 }
 .value-change-values { display: grid; grid-template-columns: 1fr 1fr; }
 .value-old, .value-new {
@@ -140,8 +212,11 @@ textarea:focus { border-color: #ff4b4b; box-shadow: 0 0 0 3px rgba(255,75,75,0.1
   font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.82rem;
   word-break: break-all;
 }
-.value-old { background: #ffebe9; color: #cf222e; border-right: 1px solid #e6eaf1; }
+.value-old { background: #ffebe9; color: #cf222e; border-right: 1px solid var(--border); }
 .value-new  { background: #e6ffec; color: #1a7f37; }
+
+[data-theme="dark"] .value-old { background: #2c0f0f; color: #f97583; }
+[data-theme="dark"] .value-new { background: #0d2c17; color: #56d364; }
 
 /* JSON display */
 pre.json-display {
@@ -156,30 +231,38 @@ pre.json-display {
 .json-null   { color: #569cd6; }
 
 /* Alerts */
-.alert {
-  padding: 0.7rem 1rem; border-radius: 0.4rem;
-  font-size: 0.88rem; margin-top: 0.5rem;
-}
+.alert { padding: 0.7rem 1rem; border-radius: 0.4rem; font-size: 0.88rem; margin-top: 0.5rem; }
 .alert-error   { background: #ffebe9; color: #cf222e; border: 1px solid #ffcecb; }
 .alert-info    { background: #ddf4ff; color: #0969da; border: 1px solid #b6e3ff; }
 .alert-success { background: #e6ffec; color: #1a7f37; border: 1px solid #b4f1be; }
 
+[data-theme="dark"] .alert-error   { background: #2c0f0f; color: #f97583; border-color: #5c1a1a; }
+[data-theme="dark"] .alert-info    { background: #0c1f3a; color: #79c0ff; border-color: #1a3a5c; }
+[data-theme="dark"] .alert-success { background: #0d2c17; color: #56d364; border-color: #1a4d2a; }
+
 .hidden { display: none !important; }
 
-footer { text-align: center; color: #808495; font-size: 0.85rem; padding: 1.5rem 0 1rem; }
-footer a { color: #ff4b4b; text-decoration: none; }
+footer { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 1.5rem 0 1rem; }
+footer a { color: var(--accent); text-decoration: none; }
 footer a:hover { text-decoration: underline; }
 </style>
 </head>
 <body>
 <div class="container">
 
-  <h1><span style="font-family:monospace;color:#ff4b4b">{}</span> JSON Comparison Tool</h1>
-  <p class="subtitle">Compare JSON files or paste JSON content to see the differences.</p>
+  <div class="header">
+    <div class="header-left">
+      <h1><span style="font-family:monospace;color:#ff4b4b">{}</span> JSON Comparison Tool</h1>
+      <p class="subtitle">Compare JSON files or paste JSON content to see the differences.</p>
+    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" id="themeBtn" aria-label="Toggle theme">
+      <span id="themeIcon">🌙</span>
+      <span class="label" id="themeLabel">Dark</span>
+    </button>
+  </div>
 
   <div class="card">
 
-    <!-- Input method -->
     <span class="section-label">Input Method</span>
     <div class="radio-group" style="margin-bottom:1.5rem">
       <label class="radio-label">
@@ -230,7 +313,6 @@ footer a:hover { text-decoration: underline; }
 
     <hr class="divider">
 
-    <!-- Comparison mode -->
     <span class="section-label">Comparison Mode</span>
     <div class="radio-group" style="margin-bottom:1.25rem">
       <label class="radio-label">
@@ -270,10 +352,28 @@ footer a:hover { text-decoration: underline; }
 </div>
 
 <script>
-// ─── State ──────────────────────────────────────────────
 let fileJson1 = null, fileJson2 = null, lastReport = null;
 
-// ─── Input method toggle ─────────────────────────────────
+// ── Theme ─────────────────────────────────────────────────
+(function initTheme() {
+  const saved = localStorage.getItem('theme') ||
+    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  applyTheme(saved);
+})();
+
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themeIcon').textContent  = theme === 'dark' ? '☀️' : '🌙';
+  document.getElementById('themeLabel').textContent = theme === 'dark' ? 'Light' : 'Dark';
+  localStorage.setItem('theme', theme);
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// ── Input method toggle ───────────────────────────────────
 document.querySelectorAll('input[name="inputMethod"]').forEach(r => {
   r.addEventListener('change', () => {
     const direct = r.value === 'direct';
@@ -284,7 +384,7 @@ document.querySelectorAll('input[name="inputMethod"]').forEach(r => {
   });
 });
 
-// ─── File upload ─────────────────────────────────────────
+// ── File upload ───────────────────────────────────────────
 function setupDrop(dropId, inputId, fnameId, ferrId, slot) {
   const drop  = document.getElementById(dropId);
   const input = document.getElementById(inputId);
@@ -316,7 +416,7 @@ function readFile(file, fnameId, ferrId, slot) {
 setupDrop('drop1', 'file1', 'fname1', 'ferr1', 1);
 setupDrop('drop2', 'file2', 'fname2', 'ferr2', 2);
 
-// ─── Parsing ─────────────────────────────────────────────
+// ── Parsing ───────────────────────────────────────────────
 function tryParse(text) {
   if (!text || !text.trim()) return { data: null, error: null };
   try { return { data: JSON.parse(text), error: null }; }
@@ -335,7 +435,7 @@ function getInputs() {
   return { j1: fileJson1, j2: fileJson2 };
 }
 
-// ─── Deep diff ───────────────────────────────────────────
+// ── Deep diff ─────────────────────────────────────────────
 function deepDiff(a, b, path) {
   path = path || '';
   const added = [], removed = [], changed = [];
@@ -370,7 +470,7 @@ function deepDiff(a, b, path) {
   return [added, removed, changed];
 }
 
-// ─── Compare ─────────────────────────────────────────────
+// ── Compare ───────────────────────────────────────────────
 function compare() {
   const { j1, j2 } = getInputs();
   if (!j1 || !j2) {
@@ -378,13 +478,12 @@ function compare() {
     return;
   }
 
-  const mode      = document.querySelector('input[name="compareMode"]:checked').value;
+  const mode = document.querySelector('input[name="compareMode"]:checked').value;
   const [add, rem, chg] = deepDiff(j1, j2);
-  const showKeys  = mode === 'full' || mode === 'keys';
-  const showVals  = mode === 'full' || mode === 'values';
-  const total     = (showKeys ? add.length + rem.length : 0) + (showVals ? chg.length : 0);
+  const showKeys = mode === 'full' || mode === 'keys';
+  const showVals = mode === 'full' || mode === 'values';
+  const total    = (showKeys ? add.length + rem.length : 0) + (showVals ? chg.length : 0);
 
-  // Differences tab
   let html = `<div class="metric">
     <div class="metric-label">Total Changes</div>
     <div class="metric-value">${total}</div>
@@ -436,7 +535,7 @@ function compare() {
   document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
 }
 
-// ─── Tabs ─────────────────────────────────────────────────
+// ── Tabs ──────────────────────────────────────────────────
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t =>
     t.classList.toggle('active', t.dataset.tab === name));
@@ -444,7 +543,7 @@ function switchTab(name) {
   document.getElementById('tab-' + name).classList.add('active');
 }
 
-// ─── Reset ───────────────────────────────────────────────
+// ── Reset ─────────────────────────────────────────────────
 function resetAll() {
   document.getElementById('json1Text').value = '';
   document.getElementById('json2Text').value = '';
@@ -453,7 +552,7 @@ function resetAll() {
   fileJson1 = fileJson2 = null;
 }
 
-// ─── Download ────────────────────────────────────────────
+// ── Download ──────────────────────────────────────────────
 function downloadReport() {
   if (!lastReport) return;
   const a = Object.assign(document.createElement('a'), {
@@ -463,7 +562,7 @@ function downloadReport() {
   a.click();
 }
 
-// ─── Helpers ─────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────
 function toggle(id, show) {
   document.getElementById(id).classList.toggle('hidden', !show);
 }
