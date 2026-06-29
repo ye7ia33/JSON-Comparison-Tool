@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON Comparison Tool</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f0f2f6;
+  color: #31333f;
+  min-height: 100vh;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+h1 { font-size: 2rem; font-weight: 700; margin-bottom: 0.4rem; }
+.subtitle { color: #808495; margin-bottom: 2rem; font-size: 0.95rem; }
+
+.card {
+  background: #fff;
+  border-radius: 0.6rem;
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* Radio groups */
+.radio-group { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+.radio-label {
+  display: flex; align-items: center; gap: 0.4rem;
+  cursor: pointer; font-size: 0.95rem; user-select: none;
+}
+.radio-label input[type="radio"] { accent-color: #ff4b4b; }
+
+.section-label {
+  display: block; font-weight: 600; font-size: 0.9rem;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  color: #808495; margin-bottom: 0.75rem;
+}
+
+/* Two column */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+.field-label { display: block; font-weight: 600; margin-bottom: 0.5rem; font-size: 0.95rem; }
+
+textarea {
+  width: 100%; height: 200px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 0.82rem; line-height: 1.5;
+  border: 1px solid #e6eaf1; border-radius: 0.4rem;
+  padding: 0.75rem; resize: vertical; outline: none;
+  transition: border-color 0.15s; color: #31333f;
+}
+textarea:focus { border-color: #ff4b4b; box-shadow: 0 0 0 3px rgba(255,75,75,0.1); }
+
+/* File drop */
+.file-drop {
+  border: 2px dashed #d1d5db; border-radius: 0.5rem;
+  padding: 2rem 1rem; text-align: center; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  min-height: 130px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.4rem;
+}
+.file-drop:hover, .file-drop.drag-over { border-color: #ff4b4b; background: #fff5f5; }
+.file-drop input[type="file"] { display: none; }
+.file-icon { font-size: 1.75rem; }
+.file-hint { color: #808495; font-size: 0.88rem; }
+.file-name { font-weight: 600; font-size: 0.9rem; color: #31333f; margin-top: 0.25rem; }
+
+/* Divider */
+.divider { border: none; border-top: 1px solid #e6eaf1; margin: 1.5rem 0; }
+
+/* Buttons */
+.btn {
+  padding: 0.6rem 1.4rem; border: none; border-radius: 0.4rem;
+  cursor: pointer; font-size: 0.95rem; font-weight: 600;
+  transition: filter 0.15s, transform 0.1s; white-space: nowrap;
+}
+.btn:hover { filter: brightness(0.93); }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: #ff4b4b; color: #fff; }
+.btn-secondary { background: #f0f2f6; color: #31333f; border: 1px solid #e6eaf1; }
+
+.actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap; }
+
+/* Tabs */
+.tabs { display: flex; border-bottom: 2px solid #e6eaf1; margin-bottom: 1.5rem; }
+.tab {
+  padding: 0.7rem 1.4rem; cursor: pointer; font-weight: 600;
+  color: #808495; border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: color 0.15s; font-size: 0.95rem;
+}
+.tab:hover { color: #31333f; }
+.tab.active { color: #ff4b4b; border-bottom-color: #ff4b4b; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Metric */
+.metric {
+  background: #f6f8fa; border-radius: 0.5rem;
+  padding: 1rem 1.5rem; display: inline-block; margin-bottom: 1.5rem;
+  border: 1px solid #e6eaf1;
+}
+.metric-label { font-size: 0.75rem; color: #808495; text-transform: uppercase; letter-spacing: 0.06em; }
+.metric-value { font-size: 2.25rem; font-weight: 700; color: #31333f; line-height: 1.2; }
+
+/* Diff key sections */
+.diff-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+@media (max-width: 640px) { .diff-grid { grid-template-columns: 1fr; } }
+
+.diff-section h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem; }
+
+.diff-item {
+  font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.82rem;
+  padding: 0.35rem 0.7rem; border-radius: 0.3rem; margin-bottom: 0.35rem;
+  word-break: break-all;
+}
+.diff-added  { background: #e6ffec; color: #1a7f37; border-left: 3px solid #2da44e; }
+.diff-removed { background: #ffebe9; color: #cf222e; border-left: 3px solid #cf222e; }
+
+/* Value changes */
+.changes-title { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem; }
+.value-change {
+  border: 1px solid #e6eaf1; border-radius: 0.5rem;
+  overflow: hidden; margin-bottom: 1rem;
+}
+.value-change-path {
+  background: #f6f8fa; padding: 0.5rem 0.8rem;
+  font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.82rem;
+  font-weight: 600; border-bottom: 1px solid #e6eaf1; word-break: break-all;
+}
+.value-change-values { display: grid; grid-template-columns: 1fr 1fr; }
+.value-old, .value-new {
+  padding: 0.55rem 0.8rem;
+  font-family: 'SFMono-Regular', Consolas, monospace; font-size: 0.82rem;
+  word-break: break-all;
+}
+.value-old { background: #ffebe9; color: #cf222e; border-right: 1px solid #e6eaf1; }
+.value-new  { background: #e6ffec; color: #1a7f37; }
+
+/* JSON display */
+pre.json-display {
+  background: #1e1e1e; color: #d4d4d4; padding: 1.25rem;
+  border-radius: 0.5rem; font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 0.82rem; overflow-x: auto; line-height: 1.6; white-space: pre;
+}
+.json-key    { color: #9cdcfe; }
+.json-string { color: #ce9178; }
+.json-number { color: #b5cea8; }
+.json-bool   { color: #569cd6; }
+.json-null   { color: #569cd6; }
+
+/* Alerts */
+.alert {
+  padding: 0.7rem 1rem; border-radius: 0.4rem;
+  font-size: 0.88rem; margin-top: 0.5rem;
+}
+.alert-error   { background: #ffebe9; color: #cf222e; border: 1px solid #ffcecb; }
+.alert-info    { background: #ddf4ff; color: #0969da; border: 1px solid #b6e3ff; }
+.alert-success { background: #e6ffec; color: #1a7f37; border: 1px solid #b4f1be; }
+
+.hidden { display: none !important; }
+
+footer { text-align: center; color: #808495; font-size: 0.85rem; padding: 1.5rem 0 1rem; }
+footer a { color: #ff4b4b; text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <h1>🔍 JSON Comparison Tool</h1>
+  <p class="subtitle">Compare JSON files or paste JSON content to see the differences.</p>
+
+  <div class="card">
+
+    <!-- Input method -->
+    <span class="section-label">Input Method</span>
+    <div class="radio-group" style="margin-bottom:1.5rem">
+      <label class="radio-label">
+        <input type="radio" name="inputMethod" value="direct" checked> Direct Input
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="inputMethod" value="file"> File Upload
+      </label>
+    </div>
+
+    <!-- Direct input -->
+    <div id="directPanel" class="two-col">
+      <div>
+        <label class="field-label">First JSON Content</label>
+        <textarea id="json1Text" placeholder="Paste first JSON here..."></textarea>
+        <div id="err1" class="alert alert-error hidden"></div>
+      </div>
+      <div>
+        <label class="field-label">Second JSON Content</label>
+        <textarea id="json2Text" placeholder="Paste second JSON here..."></textarea>
+        <div id="err2" class="alert alert-error hidden"></div>
+      </div>
+    </div>
+
+    <!-- File upload -->
+    <div id="filePanel" class="two-col hidden">
+      <div>
+        <label class="field-label">Upload first JSON file</label>
+        <div class="file-drop" id="drop1">
+          <input type="file" id="file1" accept=".json">
+          <div class="file-icon">📄</div>
+          <div class="file-hint">Click to upload or drag &amp; drop</div>
+          <div class="file-name" id="fname1"></div>
+        </div>
+        <div id="ferr1" class="alert alert-error hidden"></div>
+      </div>
+      <div>
+        <label class="field-label">Upload second JSON file</label>
+        <div class="file-drop" id="drop2">
+          <input type="file" id="file2" accept=".json">
+          <div class="file-icon">📄</div>
+          <div class="file-hint">Click to upload or drag &amp; drop</div>
+          <div class="file-name" id="fname2"></div>
+        </div>
+        <div id="ferr2" class="alert alert-error hidden"></div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Comparison mode -->
+    <span class="section-label">Comparison Mode</span>
+    <div class="radio-group" style="margin-bottom:1.25rem">
+      <label class="radio-label">
+        <input type="radio" name="compareMode" value="full" checked> Full
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="compareMode" value="keys"> Keys &amp; Structure Only
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="compareMode" value="values"> Values Only
+      </label>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="compare()">Compare JSONs</button>
+      <button class="btn btn-secondary" id="resetBtn" onclick="resetAll()">Reset All</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="results" class="card hidden">
+    <div class="tabs">
+      <div class="tab active"  data-tab="diff"  onclick="switchTab('diff')">Differences</div>
+      <div class="tab"         data-tab="json1" onclick="switchTab('json1')">JSON 1</div>
+      <div class="tab"         data-tab="json2" onclick="switchTab('json2')">JSON 2</div>
+    </div>
+    <div id="tab-diff"  class="tab-panel active"></div>
+    <div id="tab-json1" class="tab-panel"></div>
+    <div id="tab-json2" class="tab-panel"></div>
+    <hr class="divider">
+    <button class="btn btn-secondary" onclick="downloadReport()">⬇ Download Report</button>
+  </div>
+
+  <footer>
+    Made by <a href="https://www.yahia-eldow.com" target="_blank">Yahia Eldow</a>
+  </footer>
+</div>
+
+<script>
+// ─── State ──────────────────────────────────────────────
+let fileJson1 = null, fileJson2 = null, lastReport = null;
+
+// ─── Input method toggle ─────────────────────────────────
+document.querySelectorAll('input[name="inputMethod"]').forEach(r => {
+  r.addEventListener('change', () => {
+    const direct = r.value === 'direct';
+    toggle('directPanel', direct);
+    toggle('filePanel', !direct);
+    toggle('resetBtn', direct);
+    fileJson1 = fileJson2 = null;
+  });
+});
+
+// ─── File upload ─────────────────────────────────────────
+function setupDrop(dropId, inputId, fnameId, ferrId, slot) {
+  const drop  = document.getElementById(dropId);
+  const input = document.getElementById(inputId);
+
+  drop.addEventListener('click', () => input.click());
+  input.addEventListener('change', () => {
+    if (input.files[0]) readFile(input.files[0], fnameId, ferrId, slot);
+  });
+  drop.addEventListener('dragover',  e => { e.preventDefault(); drop.classList.add('drag-over'); });
+  drop.addEventListener('dragleave', ()  => drop.classList.remove('drag-over'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault(); drop.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0], fnameId, ferrId, slot);
+  });
+}
+
+function readFile(file, fnameId, ferrId, slot) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const { data, error } = tryParse(e.target.result);
+    setError(ferrId, error);
+    document.getElementById(fnameId).textContent = error ? '' : file.name;
+    if (slot === 1) fileJson1 = data;
+    else            fileJson2 = data;
+  };
+  reader.readAsText(file);
+}
+
+setupDrop('drop1', 'file1', 'fname1', 'ferr1', 1);
+setupDrop('drop2', 'file2', 'fname2', 'ferr2', 2);
+
+// ─── Parsing ─────────────────────────────────────────────
+function tryParse(text) {
+  if (!text || !text.trim()) return { data: null, error: null };
+  try { return { data: JSON.parse(text), error: null }; }
+  catch (e) { return { data: null, error: 'Invalid JSON: ' + e.message }; }
+}
+
+function getInputs() {
+  const method = document.querySelector('input[name="inputMethod"]:checked').value;
+  if (method === 'direct') {
+    const r1 = tryParse(document.getElementById('json1Text').value);
+    const r2 = tryParse(document.getElementById('json2Text').value);
+    setError('err1', r1.error);
+    setError('err2', r2.error);
+    return { j1: r1.data, j2: r2.data };
+  }
+  return { j1: fileJson1, j2: fileJson2 };
+}
+
+// ─── Deep diff ───────────────────────────────────────────
+function deepDiff(a, b, path) {
+  path = path || '';
+  const added = [], removed = [], changed = [];
+  const isObj = v => v !== null && typeof v === 'object' && !Array.isArray(v);
+
+  if (isObj(a) && isObj(b)) {
+    const keys = [...new Set([...Object.keys(a), ...Object.keys(b)])].sort();
+    for (const k of keys) {
+      const fp = path ? path + '.' + k : k;
+      if (!(k in a))      added.push(fp);
+      else if (!(k in b)) removed.push(fp);
+      else {
+        const [ad, rm, ch] = deepDiff(a[k], b[k], fp);
+        added.push(...ad); removed.push(...rm); changed.push(...ch);
+      }
+    }
+  } else if (Array.isArray(a) && Array.isArray(b)) {
+    const len = Math.max(a.length, b.length);
+    for (let i = 0; i < len; i++) {
+      const fp = path + '[' + i + ']';
+      if (i >= a.length)      added.push(fp);
+      else if (i >= b.length) removed.push(fp);
+      else {
+        const [ad, rm, ch] = deepDiff(a[i], b[i], fp);
+        added.push(...ad); removed.push(...rm); changed.push(...ch);
+      }
+    }
+  } else {
+    if (JSON.stringify(a) !== JSON.stringify(b))
+      changed.push({ path: path || '(root)', old: a, new: b });
+  }
+  return [added, removed, changed];
+}
+
+// ─── Compare ─────────────────────────────────────────────
+function compare() {
+  const { j1, j2 } = getInputs();
+  if (!j1 || !j2) {
+    alert('Please provide valid JSON in both inputs.');
+    return;
+  }
+
+  const mode      = document.querySelector('input[name="compareMode"]:checked').value;
+  const [add, rem, chg] = deepDiff(j1, j2);
+  const showKeys  = mode === 'full' || mode === 'keys';
+  const showVals  = mode === 'full' || mode === 'values';
+  const total     = (showKeys ? add.length + rem.length : 0) + (showVals ? chg.length : 0);
+
+  // Differences tab
+  let html = `<div class="metric">
+    <div class="metric-label">Total Changes</div>
+    <div class="metric-value">${total}</div>
+  </div>`;
+
+  if (showKeys) {
+    html += `<div class="diff-grid">
+      <div class="diff-section">
+        <h3>Keys Added in JSON 2</h3>
+        ${add.length
+          ? add.map(p => `<div class="diff-item diff-added">+ ${esc(p)}</div>`).join('')
+          : '<div class="alert alert-info">No keys added.</div>'}
+      </div>
+      <div class="diff-section">
+        <h3>Keys Removed from JSON 1</h3>
+        ${rem.length
+          ? rem.map(p => `<div class="diff-item diff-removed">- ${esc(p)}</div>`).join('')
+          : '<div class="alert alert-info">No keys removed.</div>'}
+      </div>
+    </div>`;
+  }
+
+  if (showVals) {
+    html += `<div class="changes-title">Value Changes</div>`;
+    html += chg.length
+      ? chg.map(c => `
+          <div class="value-change">
+            <div class="value-change-path">${esc(c.path)}</div>
+            <div class="value-change-values">
+              <div class="value-old">- ${esc(JSON.stringify(c.old))}</div>
+              <div class="value-new">+ ${esc(JSON.stringify(c.new))}</div>
+            </div>
+          </div>`).join('')
+      : '<div class="alert alert-info">No value changes found.</div>';
+  }
+
+  if (total === 0)
+    html += '<div class="alert alert-success">No differences found for the selected comparison mode.</div>';
+
+  document.getElementById('tab-diff').innerHTML  = html;
+  document.getElementById('tab-json1').innerHTML = `<pre class="json-display">${highlight(JSON.stringify(j1, null, 2))}</pre>`;
+  document.getElementById('tab-json2').innerHTML = `<pre class="json-display">${highlight(JSON.stringify(j2, null, 2))}</pre>`;
+
+  const modeLabel = { full: 'Full', keys: 'Keys & Structure Only', values: 'Values Only' }[mode];
+  lastReport = { comparison_mode: modeLabel, added_keys: add, removed_keys: rem, changed_values: chg };
+
+  document.getElementById('results').classList.remove('hidden');
+  switchTab('diff');
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ─── Tabs ─────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ─── Reset ───────────────────────────────────────────────
+function resetAll() {
+  document.getElementById('json1Text').value = '';
+  document.getElementById('json2Text').value = '';
+  setError('err1', null); setError('err2', null);
+  document.getElementById('results').classList.add('hidden');
+  fileJson1 = fileJson2 = null;
+}
+
+// ─── Download ────────────────────────────────────────────
+function downloadReport() {
+  if (!lastReport) return;
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([JSON.stringify(lastReport, null, 2)], { type: 'application/json' })),
+    download: 'json_comparison_report.json'
+  });
+  a.click();
+}
+
+// ─── Helpers ─────────────────────────────────────────────
+function toggle(id, show) {
+  document.getElementById(id).classList.toggle('hidden', !show);
+}
+function setError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg || '';
+  el.classList.toggle('hidden', !msg);
+}
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function highlight(json) {
+  return esc(json).replace(
+    /("(?:\\.|[^"\\])*")(\s*:)|("(?:\\.|[^"\\])*")|(true|false|null)|(-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)/g,
+    (_, key, colon, str, bool, num) => {
+      if (key  && colon) return `<span class="json-key">${key}</span>${colon}`;
+      if (str)           return `<span class="json-string">${str}</span>`;
+      if (bool)          return `<span class="json-bool">${bool}</span>`;
+      if (num)           return `<span class="json-number">${num}</span>`;
+      return _;
+    }
+  );
+}
+</script>
+</body>
+</html>
