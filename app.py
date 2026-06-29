@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, Tuple
 
 st.set_page_config(
     page_title="JSON Comparison Tool",
-    page_icon="🔍",
+    page_icon=":material/data_object:",
     layout="wide"
 )
 
