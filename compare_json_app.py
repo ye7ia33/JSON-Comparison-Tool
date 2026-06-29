@@ -1,7 +1,6 @@
 import streamlit as st
 import json
-import difflib
-from typing import Dict, Any, Tuple, Optional
+from typing import Any, Dict, Optional, Tuple
 
 st.set_page_config(
     page_title="JSON Comparison Tool",
@@ -46,24 +45,50 @@ def parse_json_file(uploaded_file) -> Tuple[Optional[Dict[str, Any]], Optional[s
     except Exception as e:
         return None, f"Error reading file: {str(e)}"
 
-def find_differences(json1: Dict[str, Any], json2: Dict[str, Any]) -> Dict[str, Any]:
-    """Find differences between two JSON objects and return a difference summary."""
-    differences = {}
-    json1_str = json.dumps(json1, sort_keys=True, indent=2).splitlines()
-    json2_str = json.dumps(json2, sort_keys=True, indent=2).splitlines()
-    diff = list(difflib.unified_diff(json1_str, json2_str, n=0))
-    
-    if len(diff) > 2:
-        diff = diff[2:]
-    
-    added = [line[1:] for line in diff if line.startswith('+')]
-    removed = [line[1:] for line in diff if line.startswith('-')]
-    
-    differences["added_to_json2"] = added
-    differences["removed_from_json1"] = removed
-    differences["total_changes"] = len(added) + len(removed)
-    
-    return differences
+def deep_diff(obj1: Any, obj2: Any, path: str = "") -> Tuple[list, list, list]:
+    """
+    Recursively diff two JSON values.
+    Returns (added_keys, removed_keys, changed_values).
+    - added_keys: paths present in obj2 but not obj1
+    - removed_keys: paths present in obj1 but not obj2
+    - changed_values: list of dicts {path, old, new} where leaf values differ
+    """
+    added_keys: list = []
+    removed_keys: list = []
+    changed_values: list = []
+
+    if isinstance(obj1, dict) and isinstance(obj2, dict):
+        all_keys = sorted(set(obj1.keys()) | set(obj2.keys()))
+        for key in all_keys:
+            full_path = f"{path}.{key}" if path else key
+            if key not in obj1:
+                added_keys.append(full_path)
+            elif key not in obj2:
+                removed_keys.append(full_path)
+            else:
+                a, r, c = deep_diff(obj1[key], obj2[key], full_path)
+                added_keys.extend(a)
+                removed_keys.extend(r)
+                changed_values.extend(c)
+
+    elif isinstance(obj1, list) and isinstance(obj2, list):
+        for i in range(max(len(obj1), len(obj2))):
+            full_path = f"{path}[{i}]"
+            if i >= len(obj1):
+                added_keys.append(full_path)
+            elif i >= len(obj2):
+                removed_keys.append(full_path)
+            else:
+                a, r, c = deep_diff(obj1[i], obj2[i], full_path)
+                added_keys.extend(a)
+                removed_keys.extend(r)
+                changed_values.extend(c)
+
+    else:
+        if obj1 != obj2:
+            changed_values.append({"path": path or "(root)", "old": obj1, "new": obj2})
+
+    return added_keys, removed_keys, changed_values
 
 def display_json(data: Dict[str, Any], title: str):
     """Display JSON data in a formatted way."""
@@ -71,27 +96,51 @@ def display_json(data: Dict[str, Any], title: str):
     json_str = json.dumps(data, indent=2)
     st.code(json_str, language="json")
 
-def display_differences(differences: Dict[str, Any]):
-    """Display the differences between two JSON files."""
+def display_differences(added_keys: list, removed_keys: list, changed_values: list, mode: str):
+    """Display the differences based on comparison mode."""
     st.subheader("Differences")
-    st.metric("Total Changes", differences["total_changes"])
-    
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("### Additions to JSON 2")
-        if differences["added_to_json2"]:
-            for line in differences["added_to_json2"]:
-                st.code("+ " + line, language="diff")
+
+    show_keys = mode in ("Full", "Keys & Structure Only")
+    show_values = mode in ("Full", "Values Only")
+
+    visible_count = (
+        (len(added_keys) + len(removed_keys)) if show_keys else 0
+    ) + (len(changed_values) if show_values else 0)
+
+    st.metric("Total Changes", visible_count)
+
+    if show_keys:
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("### Keys Added in JSON 2")
+            if added_keys:
+                for path in added_keys:
+                    st.code("+ " + path, language="diff")
+            else:
+                st.info("No keys added.")
+        with col2:
+            st.markdown("### Keys Removed from JSON 1")
+            if removed_keys:
+                for path in removed_keys:
+                    st.code("- " + path, language="diff")
+            else:
+                st.info("No keys removed.")
+
+    if show_values:
+        st.markdown("### Value Changes")
+        if changed_values:
+            for change in changed_values:
+                st.markdown(f"**`{change['path']}`**")
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.code(f"- {json.dumps(change['old'])}", language="diff")
+                with c2:
+                    st.code(f"+ {json.dumps(change['new'])}", language="diff")
         else:
-            st.info("No additions found.")
-    
-    with col2:
-        st.markdown("### Removals from JSON 1")
-        if differences["removed_from_json1"]:
-            for line in differences["removed_from_json1"]:
-                st.code("- " + line, language="diff")
-        else:
-            st.info("No removals found.")
+            st.info("No value changes found.")
+
+    if visible_count == 0:
+        st.success("No differences found for the selected comparison mode.")
 
 def main():
     st.title("JSON Comparison Tool")
@@ -163,35 +212,49 @@ def main():
         if error2:
             st.error(f"Error in second JSON: {error2}")
     
+    # Comparison mode selector
+    st.markdown("### Comparison Mode")
+    comparison_mode = st.radio(
+        "What to compare:",
+        ("Full", "Keys & Structure Only", "Values Only"),
+        horizontal=True,
+        help=(
+            "**Full** – report added/removed keys AND changed values.\n\n"
+            "**Keys & Structure Only** – only report keys added or removed (ignore value changes).\n\n"
+            "**Values Only** – only report value changes for keys that exist in both JSONs."
+        )
+    )
+
     # Compare button
     if st.button("Compare JSONs", type="primary"):
         if json1 is not None and json2 is not None:
             st.success("Comparison results:")
-            
+
+            added_keys, removed_keys, changed_values = deep_diff(json1, json2)
+
             tab1, tab2, tab3 = st.tabs(["Differences", "JSON 1", "JSON 2"])
-            
+
             with tab1:
-                differences = find_differences(json1, json2)
-                display_differences(differences)
-            
+                display_differences(added_keys, removed_keys, changed_values, comparison_mode)
+
             with tab2:
                 display_json(json1, "JSON 1 Content")
-            
+
             with tab3:
                 display_json(json2, "JSON 2 Content")
-            
-            if st.button("Generate Comparison Report"):
-                report = {
-                    "total_changes": differences["total_changes"],
-                    "additions": differences["added_to_json2"],
-                    "removals": differences["removed_from_json1"]
-                }
-                st.download_button(
-                    label="Download Report",
-                    data=json.dumps(report, indent=2),
-                    file_name="json_comparison_report.json",
-                    mime="application/json"
-                )
+
+            report = {
+                "comparison_mode": comparison_mode,
+                "added_keys": added_keys,
+                "removed_keys": removed_keys,
+                "changed_values": changed_values,
+            }
+            st.download_button(
+                label="Download Report",
+                data=json.dumps(report, indent=2),
+                file_name="json_comparison_report.json",
+                mime="application/json"
+            )
         else:
             st.warning("Please provide valid JSON content in both inputs to compare.")
     
